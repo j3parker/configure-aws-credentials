@@ -11,6 +11,12 @@ const SANITIZATION_CHARACTER = '_';
 const ROLE_SESSION_NAME = 'GitHubActions';
 const REGION_REGEX = /^[a-z0-9-]+$/g;
 
+// With role chaining the maximum duration for tokens is one hour.
+// See the footnote here: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html
+// Not every use of role-to-assume implies role chaining but this is
+// a safer default.
+const MAX_ROLE_CHAIN_DURATION = 3600;
+
 async function assumeRole(params) {
   // Assume a role to get short-lived credentials using longer-lived credentials.
   const isDefined = i => !!i;
@@ -194,7 +200,7 @@ async function run() {
     const maskAccountId = core.getInput('mask-aws-account-id', { required: false });
     const roleToAssume = core.getInput('role-to-assume', {required: false});
     const roleExternalId = core.getInput('role-external-id', { required: false });
-    const roleDurationSeconds = core.getInput('role-duration-seconds', {required: false}) || MAX_ACTION_RUNTIME;
+    const roleDurationSeconds = core.getInput('role-duration-seconds', {required: false}) || (roleToAssume && MAX_ROLE_CHAIN_DURATION) || MAX_ACTION_RUNTIME;
     const roleSessionName = core.getInput('role-session-name', { required: false }) || ROLE_SESSION_NAME;
 
     if (!region.match(REGION_REGEX)) {
